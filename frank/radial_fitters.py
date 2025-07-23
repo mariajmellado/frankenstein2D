@@ -438,13 +438,15 @@ class FourierBesselFitter(object):
     def __init__(self, Rmax, N, geometry=None, nu=0, block_data=True,
                  assume_optically_thick=True, scale_height=None,
                  block_size=10 ** 5, verbose=True, geometry_on = True):
-
+        
+        
         Rmax /= rad_to_arcsec
 
         self._geometry = geometry
 
         self._DHT = DiscreteHankelTransform(Rmax, N, nu)
         self._DFT = DiscreteFourierTransform2D(Rmax, N)
+        self._Rmax = Rmax*rad_to_arcsec
 
         if assume_optically_thick:
             if scale_height is not None:
@@ -515,6 +517,7 @@ class FourierBesselFitter(object):
         self._j = mapping['j']
         self._V = mapping['V']
         self._Wvalues = mapping['W']
+        self._identities = mapping['identities']
 
         self._H0 = mapping['null_likelihood']
 
@@ -579,8 +582,10 @@ class FourierBesselFitter(object):
     def _fit(self):
         """Fit step. Computes the best fit given the pre-processed data"""
         fit = GaussianModel(self._DHT, self._M, self._j,
+                            self._Rmax,
                             noise_likelihood=self._H0,
-                            Wvalues= self._Wvalues, V = self._V, DFT = self._DFT)
+                            Wvalues= self._Wvalues, V = self._V, DFT = self._DFT,
+                            identities = self._identities)
 
         self._sol = FrankGaussianFit(self._vis_map, fit, self._info,
                                      geometry=None)
